@@ -30,11 +30,15 @@ function optim.nag(opfunc, x, config, state)
    local lr = config.learningRate or 1e-3
    local lrd = config.learningRateDecay or 0
    local wd = config.weightDecay or 0
-   local mom = config.momentum or 0
+   local mom = config.momentum or 0.9
    local damp = config.dampening or mom
    local lrs = config.learningRates
    state.evalCounter = state.evalCounter or 0
    local nevals = state.evalCounter
+
+   if mom <= 0 then
+     error('Momentum must be positive for Nesterov Accelerated Gradient')
+   end
 
    -- (1) evaluate f(x) and df/dx
    -- first step in the direction of the momentum vector
@@ -61,9 +65,7 @@ function optim.nag(opfunc, x, config, state)
    -- (4) apply momentum
    if not state.dfdx then
       state.dfdx = torch.Tensor():typeAs(dfdx):resizeAs(dfdx):fill(0)
-   end
-
-   if mom ~= 0 then
+   else
       state.dfdx:mul(mom)
    end
 
